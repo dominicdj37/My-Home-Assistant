@@ -1,0 +1,28 @@
+# Compiles every sketch that has a sketch.yaml, using its pinned profile.
+# Real secrets are never needed to compile: CI uses secrets.example.h.
+name: Firmware build
+
+on:
+  push:
+    paths:
+      - "sketches/**"
+      - ".github/workflows/firmware-ci.yml"
+  pull_request:
+    paths:
+      - "sketches/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sketch:
+          - sketches/ir-fan-controller
+    steps:
+      - uses: actions/checkout@v7
+      - uses: arduino/setup-arduino-cli@v2
+      - name: Use example secrets
+        run: cp "${{ matrix.sketch }}/secrets.example.h" "${{ matrix.sketch }}/secrets.h"
+      - name: Compile
+        run: arduino-cli compile --profile nodemcuv2 --warnings default "${{ matrix.sketch }}"

@@ -1,0 +1,23 @@
+# ─── Secrets (never commit) ───────────────────────────────────────────
+sketches/**/secrets.h
+.env
+.env.*
+
+# ─── Arduino ──────────────────────────────────────────────────────────
+# Libraries are installed by the Arduino IDE into the sketchbook and are
+# pinned per sketch in sketch.yaml, so they are not vendored in the repo.
+sketches/libraries/
+sketches/**/build/
+.pio/
+
+# ─── Firebase CLI ─────────────────────────────────────────────────────
+.firebase/
+firebase-debug.log
+database-debug.log
+
+# ─── Tooling / OS ─────────────────────────────────────────────────────
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+.idea/

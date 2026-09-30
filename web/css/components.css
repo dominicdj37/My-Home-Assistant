@@ -1,0 +1,250 @@
+/* ─── Buttons ──────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s, background-color 0.1s, opacity 0.2s;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.95);
+  background: var(--color-surface-raised);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  border-color: transparent;
+  color: var(--color-on-accent);
+}
+
+.btn-ghost {
+  min-height: 36px;
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-caption {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* ─── Panels (login / setup / no-access) ───────────────────────────── */
+
+.panel {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.panel h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.panel p {
+  margin: 0 0 var(--space-4);
+}
+
+.code {
+  display: block;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  word-break: break-all;
+  user-select: all;
+}
+
+/* ─── Device cards ─────────────────────────────────────────────────── */
+
+.device-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.device-card {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.device-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.device-card__name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.device-card__meta {
+  margin: 0 0 var(--space-4);
+  font-size: 13px;
+}
+
+.device-card__details {
+  margin-top: var(--space-4);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.device-card__details summary {
+  cursor: pointer;
+}
+
+.device-card__details dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-2) 0 0;
+}
+
+.device-card__details dd {
+  margin: 0;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-offline);
+}
+
+.badge--online::before {
+  background: var(--color-online);
+}
+
+/* ─── Fan controls ─────────────────────────────────────────────────── */
+
+.fan-controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.fan-controls .btn-power {
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-power);
+  border-color: transparent;
+  color: var(--color-on-accent);
+  font-size: 18px;
+}
+
+.fan-controls .btn-boost {
+  background: var(--color-boost);
+  border-color: transparent;
+  color: var(--color-on-accent);
+  font-size: 17px;
+}
+
+.speed-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-2);
+}
+
+.speed-row .btn {
+  padding: var(--space-4) 0;
+  font-size: 20px;
+}
+
+.speed-row .btn[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.speed-caption {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ─── Toast ────────────────────────────────────────────────────────── */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(30px + env(safe-area-inset-bottom));
+  z-index: 10;
+  max-width: calc(100% - 32px);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 20px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast--error {
+  background: var(--color-power);
+}
+
+/* ─── Header user chip ─────────────────────────────────────────────── */
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+}

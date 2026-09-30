@@ -1,0 +1,54 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "access": {
+      "users": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      }
+    },
+
+    "devices": {
+      ".read": "auth != null && root.child('access/users/' + auth.uid).val() === true",
+
+      "$deviceId": {
+        ".read": "auth != null && root.child('access/devices/' + $deviceId).val() === auth.uid",
+
+        "info": {
+          ".write": "auth != null && root.child('access/devices/' + $deviceId).val() === auth.uid"
+        },
+        "status": {
+          ".write": "auth != null && root.child('access/devices/' + $deviceId).val() === auth.uid"
+        },
+        "state": {
+          ".write": "auth != null && root.child('access/devices/' + $deviceId).val() === auth.uid"
+        },
+        "lastAck": {
+          ".write": "auth != null && root.child('access/devices/' + $deviceId).val() === auth.uid"
+        },
+
+        "commands": {
+          "$commandId": {
+            ".write": "auth != null && ((root.child('access/users/' + auth.uid).val() === true && root.child('access/devices/' + $deviceId).exists() && !data.exists() && newData.exists()) || (root.child('access/users/' + auth.uid).val() === true && data.child('issuedBy').val() === auth.uid && !newData.exists()) || (root.child('access/devices/' + $deviceId).val() === auth.uid && !newData.exists()))",
+            ".validate": "newData.hasChildren(['action', 'issuedAt', 'issuedBy'])",
+            "action": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9_]{1,32}$/)"
+            },
+            "issuedAt": {
+              ".validate": "newData.val() === now"
+            },
+            "issuedBy": {
+              ".validate": "newData.val() === auth.uid"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
