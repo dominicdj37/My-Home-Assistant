@@ -97,24 +97,32 @@ series resistor from 3V3/5V.
 
 ## 5. Grant access
 
-1. Open the Pages URL and sign in with Google. You'll see
-   *"Access not granted yet"* with your UID. Tap **Copy UID**.
-2. Firebase **Realtime Database → Data**: hover the root, click **+**, and
+Two entries are made once in the console; everything else happens in the web
+app.
+
+1. Firebase **Realtime Database → Data**: hover the root, click **+**, and
    create:
    ```
    access
-     users
-       <your UID>: true
+     admins
+       dominicdj37@gmail,com: true        ← your Gmail, with "." → ","
      devices
        fan-1: "<device UID from step 1.3>"
    ```
-   (Template: [`firebase/access.example.json`](../firebase/access.example.json).
-   You can also use **⋮ → Import JSON** on an empty `access` node.)
-3. Reload the page. The fan card appears, and goes **Online** within a
-   minute once the NodeMCU is running.
+   (Template: [`firebase/access.example.json`](../firebase/access.example.json).)
+2. Open the Pages URL and sign in with Google. You get the devices plus a
+   **People** tab.
 
-To let family members in, they sign in once, send you their UID, and you add
-it under `access/users`.
+### Giving other people access
+
+- **By email:** People → *Give access* → type their Gmail → **Add**. They
+  have access as soon as they sign in with that Google account.
+- **By request:** anyone else who signs in sees **Request access**. Requests
+  appear under People (with a count on the tab) → **Approve** / **Deny**.
+- **Revoke:** People → **Revoke** → tap again to confirm. Their open page
+  loses access immediately.
+
+Admins can only be added or removed in the console (`access/admins`).
 
 ---
 
@@ -132,10 +140,10 @@ python -m http.server 8080 --directory web
 ```
 
 Open <http://localhost:8080/?emulator>. The `?emulator` flag (localhost only)
-points the app at the emulators. Sign in with the emulator's fake Google
-account, then grant yourself access in the Emulator UI
-(<http://127.0.0.1:4000/database>, namespace `demo-home-default-rtdb`) under
-`access/users/<uid>: true`.
+points the app at the emulators. In the Emulator UI
+(<http://127.0.0.1:4000/database>, namespace `demo-home-default-rtdb`) add
+`access/admins/<your,email>: true`, then sign in with the emulator's fake
+Google account using that same email.
 
 ### Compile firmware from the command line
 

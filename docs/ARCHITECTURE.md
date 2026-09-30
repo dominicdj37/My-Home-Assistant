@@ -50,8 +50,11 @@ without polling. Firestore has no streaming listener on this hardware.
 
 ```
 /access
-  /users/{uid}: true                  ← people allowed to use the dashboard (set by admin)
-  /devices/{deviceId}: "{authUid}"    ← which auth account *is* each device (set by admin)
+  /admins/{emailKey}: true            ← admins (console only); admins also have access
+  /emails/{emailKey}  { addedAt, addedBy }   ← people with access (managed in the web app)
+  /devices/{deviceId}: "{authUid}"    ← which auth account *is* each device (console)
+
+/accessRequests/{uid}  { name, email, photoURL, requestedAt }   ← pending requests
 
 /devices/{deviceId}
   /info       { name, type, firmware, hardware, mac, bootedAt }   device writes on boot
@@ -61,6 +64,8 @@ without polling. Firestore has no streaming listener on this hardware.
   /commands/{pushId}  { action, issuedAt, issuedBy }              people create; device deletes
 ```
 
+- `emailKey` is the lower-cased email with `.` replaced by `,` (database keys
+  can't contain `.`): `dominicdj37@gmail.com` → `dominicdj37@gmail,com`.
 - `info.type` (e.g. `"ir_fan"`) selects which UI card the web app renders.
 - All timestamps are server timestamps (ms since epoch).
 - **Presence** is heartbeat-based: a device is online if
@@ -103,9 +108,20 @@ action rather than a fake "fan is on".
 
 ## Security model
 
-- **People** sign in with Google. Signing in grants nothing by itself: the
-  UID must be added under `/access/users` by you (the admin, via the
-  console). The dashboard shows the UID to copy.
+- **People** sign in with Google. Access is granted per **verified email**
+  (`auth.token.email` with `email_verified`), so the admin can grant access to
+  someone who has never signed in. Signing in grants nothing by itself.
+  - Admin → **People** screen: add an email, approve/deny requests, revoke.
+  - Anyone else → **Request access** (name + email taken from their Google
+    account and checked by the rules). Approval adds their email.
+  - Access is watched live: approving or revoking takes effect on the other
+    person's open page immediately.
+  - Admins are listed under `/access/admins` and can only be changed in the
+    Firebase console, so an admin can't be revoked (or lock themselves out)
+    from the web app.
+  - An email/password account claiming a granted address is refused: it isn't
+    verified. (The device accounts are email/password, so they never count as
+    people.)
 - **Devices** sign in as their own email/password account. `/access/devices`
   binds a device id to that account, so a device can only read its own
   command queue and write its own status. It cannot read other devices or
@@ -113,7 +129,7 @@ action rather than a fake "fan is on".
 - **Rules validate every command**: whitelisted fields, `action` matches
   `[a-z0-9_]{1,32}`, `issuedAt` must equal server time, `issuedBy` must be the
   caller, commands can't be overwritten, and people can only cancel their own.
-  These are covered by an emulator test suite (31 cases).
+  Rules are covered by an emulator test suite (55 cases).
 - **Public config is fine.** The Firebase web `apiKey` identifies the project;
   it is not a secret. Firmware secrets (Wi-Fi, device password, OTA password)
   live in `secrets.h`, which is gitignored.
@@ -146,7 +162,7 @@ Replacing it (e.g. with MQTT) leaves the driver and command policy untouched.
 web/
   index.html              shell + import map (Firebase SDK version pinned here)
   js/main.js              entry: setup screen or app
-  js/app.js               auth-state router (login / no access / dashboard)
+  js/app.js               session router (login / no access / devices / people)
   js/config/              firebase + app constants
   js/services/            firebase, auth, devices (commands/acks), server time
   js/devices/registry.js  info.type → controls factory

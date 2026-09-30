@@ -53,6 +53,7 @@ body {
 .app-header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--space-3);
   max-width: 480px;
@@ -69,8 +70,11 @@ body {
 
 .header-actions {
   display: flex;
+  flex: 1;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .app-main {

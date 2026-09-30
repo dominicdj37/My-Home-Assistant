@@ -4,15 +4,58 @@
     ".write": false,
 
     "access": {
-      "users": {
-        "$uid": {
-          ".read": "auth != null && auth.uid === $uid"
+      "admins": {
+        ".read": "auth != null && auth.token.email_verified === true && root.child('access/admins/' + auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+        "$emailKey": {
+          ".read": "auth != null && auth.token.email_verified === true && $emailKey === auth.token.email.toLowerCase().replace('.', ',')"
+        }
+      },
+
+      "emails": {
+        ".read": "auth != null && auth.token.email_verified === true && root.child('access/admins/' + auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+        "$emailKey": {
+          ".read": "auth != null && auth.token.email_verified === true && $emailKey === auth.token.email.toLowerCase().replace('.', ',')",
+          ".write": "auth != null && auth.token.email_verified === true && root.child('access/admins/' + auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+          ".validate": "$emailKey.matches(/^[^@ ]+@[^@ ]+$/) && $emailKey === $emailKey.toLowerCase() && newData.hasChildren(['addedAt', 'addedBy'])",
+          "addedAt": {
+            ".validate": "newData.val() === now"
+          },
+          "addedBy": {
+            ".validate": "newData.val() === auth.token.email"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+
+    "accessRequests": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('access/admins/' + auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $uid && (!data.exists() || !newData.exists())) || (root.child('access/admins/' + auth.token.email.toLowerCase().replace('.', ',')).val() === true && !newData.exists()))",
+        ".validate": "newData.hasChildren(['name', 'email', 'requestedAt'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "email": {
+          ".validate": "newData.val() === auth.token.email"
+        },
+        "photoURL": {
+          ".validate": "newData.isString() && newData.val().length <= 1000"
+        },
+        "requestedAt": {
+          ".validate": "newData.val() === now"
+        },
+        "$other": {
+          ".validate": false
         }
       }
     },
 
     "devices": {
-      ".read": "auth != null && root.child('access/users/' + auth.uid).val() === true",
+      ".read": "auth != null && auth.token.email_verified === true && (root.child('access/admins/' + auth.token.email.toLowerCase().replace('.', ',')).val() === true || root.child('access/emails/' + auth.token.email.toLowerCase().replace('.', ',')).exists())",
 
       "$deviceId": {
         ".read": "auth != null && root.child('access/devices/' + $deviceId).val() === auth.uid",
@@ -32,7 +75,7 @@
 
         "commands": {
           "$commandId": {
-            ".write": "auth != null && ((root.child('access/users/' + auth.uid).val() === true && root.child('access/devices/' + $deviceId).exists() && !data.exists() && newData.exists()) || (root.child('access/users/' + auth.uid).val() === true && data.child('issuedBy').val() === auth.uid && !newData.exists()) || (root.child('access/devices/' + $deviceId).val() === auth.uid && !newData.exists()))",
+            ".write": "auth != null && ((auth.token.email_verified === true && (root.child('access/admins/' + auth.token.email.toLowerCase().replace('.', ',')).val() === true || root.child('access/emails/' + auth.token.email.toLowerCase().replace('.', ',')).exists()) && ((root.child('access/devices/' + $deviceId).exists() && !data.exists() && newData.exists()) || (data.child('issuedBy').val() === auth.uid && !newData.exists()))) || (root.child('access/devices/' + $deviceId).val() === auth.uid && !newData.exists()))",
             ".validate": "newData.hasChildren(['action', 'issuedAt', 'issuedBy'])",
             "action": {
               ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9_]{1,32}$/)"

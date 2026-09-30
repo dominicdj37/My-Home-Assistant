@@ -4,9 +4,7 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
 } from "firebase/auth";
-import { get, ref } from "firebase/database";
-
-import { auth, db } from "./firebase.js";
+import { auth } from "./firebase.js";
 
 export function onUserChanged(callback) {
   return onAuthStateChanged(auth, callback);
@@ -22,10 +20,4 @@ export function signOut() {
 
 export function currentUserId() {
   return auth.currentUser?.uid ?? null;
-}
-
-/** True if an admin has added this user under /access/users in the database. */
-export async function hasAccess(uid) {
-  const snapshot = await get(ref(db, `access/users/${uid}`));
-  return snapshot.val() === true;
 }

@@ -1,6 +1,6 @@
 {
-  "users": {
-    "PASTE_YOUR_GOOGLE_ACCOUNT_UID": true
+  "admins": {
+    "dominicdj37@gmail,com": true
   },
   "devices": {
     "fan-1": "PASTE_THE_DEVICE_ACCOUNT_UID"
