@@ -4,11 +4,11 @@
 // These values identify the project; they are not secrets and are safe to
 // commit. Access is enforced by Authentication + firebase/database.rules.json.
 const projectConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyA81R9ojCn8cqnBuL_mcJMWPoQFtdTrpzc",
+  authDomain: "my-home-assistant-abfeb.firebaseapp.com",
+  databaseURL: "https://my-home-assistant-abfeb-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-home-assistant-abfeb",
+  appId: "1:781776368772:web:930f53f2b8a8a7c7e87ed1",
 };
 
 // Local development against the Firebase emulators (see docs/SETUP.md):
