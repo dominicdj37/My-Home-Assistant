@@ -2,6 +2,7 @@ import { cancelRequest, requestAccess, watchMyRequest } from "../../services/acc
 import { serverNow } from "../../services/server-time.js";
 import { h, mount } from "../dom.js";
 import { formatAgo } from "../format.js";
+import { icon } from "../icons.js";
 import { showToast } from "../toast.js";
 
 /**
@@ -10,14 +11,15 @@ import { showToast } from "../toast.js";
  * admin approves (the app watches access live).
  */
 export function renderNoAccess(container, user) {
-  const status = h("div");
+  const status = h("div", { class: "panel__status" });
   mount(
     container,
     h(
       "section",
-      { class: "panel" },
-      h("h2", {}, "Access not granted yet"),
-      h("p", { class: "muted" }, "Signed in as ", h("strong", {}, user.email ?? "unknown")),
+      { class: "panel glass" },
+      h("span", { class: "panel__badge" }, icon("lock")),
+      h("h1", { class: "panel__title" }, "Access not granted yet"),
+      h("p", { class: "muted" }, "Signed in as ", h("strong", { class: "text-strong" }, user.email ?? "unknown")),
       status,
     ),
   );
@@ -34,8 +36,9 @@ export function renderNoAccess(container, user) {
     if (request) {
       mount(
         status,
-        h("p", { class: "muted" }, `Request sent ${formatAgo(request.requestedAt, serverNow())}. This page opens automatically once the admin approves.`),
-        h("button", { type: "button", class: "btn", onclick: () => run(() => cancelRequest(user.uid), "Couldn't cancel") }, "Cancel request"),
+        h("p", { class: "pending" }, h("span", { class: "pending__pulse" }), `Request sent ${formatAgo(request.requestedAt, serverNow())}`),
+        h("p", { class: "muted small" }, "This page opens automatically once the admin approves."),
+        h("button", { type: "button", class: "btn btn-ghost", onclick: () => run(() => cancelRequest(user.uid), "Couldn't cancel") }, "Cancel request"),
       );
     } else {
       mount(

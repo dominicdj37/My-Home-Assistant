@@ -10,6 +10,7 @@ import {
 import { serverNow } from "../../services/server-time.js";
 import { h, mount } from "../dom.js";
 import { formatAgo } from "../format.js";
+import { icon } from "../icons.js";
 import { showToast } from "../toast.js";
 
 const CONFIRM_WINDOW_MS = 3000;
@@ -31,7 +32,7 @@ export function renderPeople(container, admin) {
     "form",
     { class: "form-row", onsubmit: (event) => { event.preventDefault(); addEmail(); } },
     input,
-    h("button", { type: "submit", class: "btn btn-primary" }, "Add"),
+    h("button", { type: "submit", class: "btn btn-primary" }, icon("plus"), "Add"),
   );
 
   const requestsSection = h("section", { class: "section" });
@@ -41,7 +42,13 @@ export function renderPeople(container, admin) {
     container,
     h(
       "section",
-      { class: "section" },
+      { class: "hero" },
+      h("p", { class: "eyebrow" }, icon("users"), "Admin"),
+      h("h1", { class: "hero__title" }, "People ", h("span", { class: "gradient-text" }, "& access")),
+    ),
+    h(
+      "section",
+      { class: "section glass section--card" },
       h("h2", { class: "section__title" }, "Give access"),
       h("p", { class: "muted section__hint" }, "Anyone signing in with Google using this email gets access."),
       addForm,
@@ -86,10 +93,11 @@ export function renderPeople(container, admin) {
       h("h2", { class: "section__title" }, `Requests (${requests.length})`),
       h(
         "ul",
-        { class: "list" },
+        { class: "list glass" },
         requests.map((request) =>
           listRow({
             photoURL: request.photoURL,
+            initial: request.name,
             title: request.name,
             meta: `${request.email} · ${formatAgo(request.requestedAt, serverNow())}`,
             actions: [
@@ -117,12 +125,13 @@ export function renderPeople(container, admin) {
       h("h2", { class: "section__title" }, `People with access (${sorted.length})`),
       h(
         "ul",
-        { class: "list" },
+        { class: "list glass" },
         sorted.map((member) =>
           listRow({
+            initial: member.email,
             title: member.email,
             meta: member.isAdmin
-              ? "Admin"
+              ? h("span", { class: "tag" }, "Admin")
               : member.addedAt
                 ? `Added ${formatAgo(member.addedAt, serverNow())}${member.addedBy ? ` by ${member.addedBy}` : ""}`
                 : "",
@@ -146,11 +155,13 @@ export function renderPeople(container, admin) {
   };
 }
 
-function listRow({ photoURL, title, meta, actions }) {
+function listRow({ photoURL, initial, title, meta, actions }) {
   return h(
     "li",
     { class: "list-row" },
-    photoURL ? h("img", { class: "avatar", src: photoURL, alt: "", referrerpolicy: "no-referrer" }) : null,
+    photoURL
+      ? h("img", { class: "avatar", src: photoURL, alt: "", referrerpolicy: "no-referrer" })
+      : h("span", { class: "avatar avatar--initial", "aria-hidden": "true" }, (initial ?? "?").charAt(0).toUpperCase()),
     h("div", { class: "list-row__main" }, h("div", { class: "list-row__title" }, title), meta ? h("div", { class: "list-row__meta muted" }, meta) : null),
     h("div", { class: "list-row__actions" }, actions),
   );

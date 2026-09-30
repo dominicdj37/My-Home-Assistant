@@ -58,8 +58,8 @@ function startSession(container, headerActions, user) {
   function renderNav() {
     const nav = access?.isAdmin
       ? [
-          { label: "Devices", href: "#/", active: currentView === "devices" },
-          { label: "People", href: PEOPLE_ROUTE, active: currentView === "people", badge: pendingRequests },
+          { label: "Devices", icon: "grid", href: "#/", active: currentView === "devices" },
+          { label: "People", icon: "users", href: PEOPLE_ROUTE, active: currentView === "people", badge: pendingRequests },
         ]
       : [];
     renderHeader(headerActions, { user, nav, onSignOut: signOut });
@@ -79,7 +79,7 @@ function startSession(container, headerActions, user) {
     switch (view) {
       case "no-access": return renderNoAccess(container, user);
       case "people": return renderPeople(container, user);
-      case "devices": return renderDashboard(container);
+      case "devices": return renderDashboard(container, user);
       default: mount(container, h("p", { class: "muted center" }, "Checking access…"));
     }
   }
