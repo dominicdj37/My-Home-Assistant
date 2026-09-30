@@ -22,6 +22,12 @@ namespace {
 // Firebase ID tokens live 1 h; refresh a bit earlier.
 constexpr size_t kTokenTtlSec = 3000;
 
+// When the database denies access (device missing from /access/devices, or
+// removed), the library would retry the stream every 5 s — ~17k denied
+// requests a day. Instead, pause all traffic and retry with backoff.
+constexpr uint32_t kDeniedRetryMinMs = 30UL * 1000;
+constexpr uint32_t kDeniedRetryMaxMs = 15UL * 60 * 1000;
+
 // One TLS connection for regular requests and a dedicated one for the
 // long-lived command stream (the library requires them to be separate).
 WiFiClientSecure sslClient;
@@ -37,17 +43,29 @@ RealtimeDatabase db;
 CommandCallback commandCallback = nullptr;
 String devicePath;  // "/devices/<id>"
 bool started = false;
+bool streamRunning = false;
 bool infoPublished = false;
 bool heartbeatSent = false;
 uint32_t lastHeartbeatMs = 0;
 
+bool accessDenied = false;  // set by callbacks, handled in loop()
+uint32_t pausedAtMs = 0;
+uint32_t pauseMs = 0;
+uint32_t nextRetryDelayMs = kDeniedRetryMinMs;
+
 // ─── Result callbacks ─────────────────────────────────────────────────
 
+bool isAccessDenied(AsyncResult& result) {
+  const int code = result.error().code();
+  return code == FIREBASE_ERROR_HTTP_CODE_UNAUTHORIZED ||
+         code == FIREBASE_ERROR_HTTP_CODE_FORBIDDEN;
+}
+
 void logErrors(AsyncResult& result) {
-  if (result.isError()) {
-    LOG("cloud", "%s failed: %s (%d)", result.uid().c_str(),
-        result.error().message().c_str(), result.error().code());
-  }
+  if (!result.isError()) return;
+  LOG("cloud", "%s failed: %s (%d)", result.uid().c_str(),
+      result.error().message().c_str(), result.error().code());
+  if (isAccessDenied(result)) accessDenied = true;
 }
 
 void onAuthResult(AsyncResult& result) {
@@ -105,7 +123,10 @@ void onStreamResult(AsyncResult& result) {
   if (!result.available()) return;
 
   RealtimeDatabaseResult& stream = result.to<RealtimeDatabaseResult>();
-  if (stream.isStream()) onStreamEvent(stream);
+  if (!stream.isStream()) return;
+
+  nextRetryDelayMs = kDeniedRetryMinMs;  // stream works: reset backoff
+  onStreamEvent(stream);
 }
 
 // ─── Outgoing writes ──────────────────────────────────────────────────
@@ -150,15 +171,30 @@ void start() {
   initializeApp(client, app, getAuth(userAuth), onAuthResult, "auth");
   app.getApp<RealtimeDatabase>(db);
   db.url(secrets::FIREBASE_DATABASE_URL);
-
-  // The stream connects once authentication completes and reconnects on
-  // its own after network drops or token refreshes.
   streamClient.setSSEFilters("get,put,patch,cancel,auth_revoked");
-  db.get(streamClient, devicePath + "/commands", onStreamResult,
-         true /* SSE stream */, "commands");
 
   started = true;
   LOG("cloud", "started for %s", devicePath.c_str());
+}
+
+// The stream reconnects on its own after network drops or token refreshes;
+// it is only stopped and restarted by hand when access is denied.
+void startStream() {
+  accessDenied = false;
+  db.get(streamClient, devicePath + "/commands", onStreamResult,
+         true /* SSE stream */, "commands");
+  streamRunning = true;
+}
+
+void pauseForDeniedAccess() {
+  streamClient.stopAsync();
+  streamRunning = false;
+  infoPublished = false;  // the denied info write is re-sent after resuming
+  pausedAtMs = millis();
+  pauseMs = nextRetryDelayMs;
+  nextRetryDelayMs = min(nextRetryDelayMs * 2, kDeniedRetryMaxMs);
+  LOG("cloud", "access denied: is /access/devices/%s set to this device's UID?"
+      " Retrying in %u s", config::DEVICE_ID, static_cast<unsigned>(pauseMs / 1000));
 }
 
 }  // namespace
@@ -176,6 +212,12 @@ void loop() {
 
   app.loop();
   if (!app.ready()) return;
+
+  if (accessDenied && streamRunning) pauseForDeniedAccess();
+  if (!streamRunning) {
+    if (millis() - pausedAtMs < pauseMs) return;  // backing off: no traffic
+    startStream();
+  }
 
   if (!infoPublished) {
     publishInfo();
